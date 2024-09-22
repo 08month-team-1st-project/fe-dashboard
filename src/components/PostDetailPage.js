@@ -81,6 +81,9 @@ const PostDetailPage = () => {
   const submitComment = async () => {
     await fetch(`http://localhost:8080/api/comments`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json' // 헤더 추가
+      },
       body: JSON.stringify({
         author: newComment.author,
         content: newComment.content,
