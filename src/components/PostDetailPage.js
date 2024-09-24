@@ -26,6 +26,8 @@ const PostDetailPage = () => {
     content: '',
     author: ''
   })
+  const [newReply, setNewReply] = useState({}); // 새로운 대댓글 상태
+  const [replyFormVisible, setReplyFormVisible] = useState({});
 
   async function fetchData() {
     await fetch('http://localhost:8080/api/comments')
@@ -105,6 +107,36 @@ const PostDetailPage = () => {
     }).catch((err) => console.error(err));
   }
 
+  const submitReply = async (commentId) => {
+    await fetch(`http://localhost:8080/api/replies`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        author: newReply[commentId]?.author,
+        content: newReply[commentId]?.content,
+        comment_id: commentId
+      })
+    }).catch((err) => console.error(err));
+  };
+  const handleReplyChange = (commentId, field, value) => {
+    setNewReply((prev) => ({
+      ...prev,
+      [commentId]: {
+        ...prev[commentId],
+        [field]: value
+      }
+    }));
+  };
+
+  const toggleReplyForm = (commentId) => {
+    setReplyFormVisible((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId] // 토글 기능
+    }));
+  };
+
   return (
     <div style={{
       padding: '40px'
@@ -165,6 +197,34 @@ const PostDetailPage = () => {
                 </Typography>
                 <CustomButton style={{ backgroundColor: blue[500] }} onClick={() => handleCommentChange(c.id, c.content)}>수정</CustomButton>
                 <CustomButton style={{ backgroundColor: red[500], marginLeft: 10 }} onClick={() => handleCommentDelete(c.id)}>삭제</CustomButton> {/* 삭제 버튼 추가 */}
+                <CustomButton
+                    style={{ backgroundColor: blue[500], marginLeft: 10 }}
+                    onClick={() => toggleReplyForm(c.id)}
+                >답글
+                </CustomButton>
+                {/* 답글 입력 폼 (토글 상태에 따라 표시) */}
+                {replyFormVisible[c.id] && (
+                    <div style={{ marginTop: '10px', paddingLeft: '20px' }}>
+                      <TextField
+                          variant="outlined"
+                          label="답글 작성자"
+                          value={newReply[c.id]?.author || ''}
+                          onChange={(e) => handleReplyChange(c.id, 'author', e.target.value)}
+                      />
+                      <TextField
+                          variant="outlined"
+                          label="답글 내용"
+                          value={newReply[c.id]?.content || ''}
+                          onChange={(e) => handleReplyChange(c.id, 'content', e.target.value)}
+                      />
+                      <CustomButton
+                          style={{ backgroundColor: blue[500], marginTop: '10px' }}
+                          onClick={() => submitReply(c.id)}
+                      >
+                        답글 생성
+                      </CustomButton>
+                    </div>
+                )}
               </CardContent>
             </Card>
           )))
