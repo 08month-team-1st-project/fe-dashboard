@@ -62,6 +62,9 @@ const PostDetailPage = () => {
   const handleCommentChange = async (id, content) => {
     await fetch(`http://localhost:8080/api/comments/${id}`, {
       method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json' // 헤더 추가
+      },
       body: JSON.stringify({
         content: content
       })
@@ -70,7 +73,6 @@ const PostDetailPage = () => {
 
   const changeComment = (commentId, comment) => {
     const indexToUpdate = comments.findIndex((item) => item.id === commentId);
-
     const newComments = comments;
     if (indexToUpdate !== -1) {
       newComments[indexToUpdate] = {
@@ -92,6 +94,14 @@ const PostDetailPage = () => {
         content: newComment.content,
         post_id: post.id
       })
+    }).catch((err) => console.error(err));
+  }
+
+  const handleCommentDelete = async (id) => {
+    await fetch(`http://localhost:8080/api/comments/${id}`, {
+      method: 'DELETE'
+    }).then(() => {
+      setComments(comments.filter(c => c.id !== id)); // 로컬 상태에서 댓글 삭제
     }).catch((err) => console.error(err));
   }
 
@@ -154,6 +164,7 @@ const PostDetailPage = () => {
                   {c?.created_at || ''}
                 </Typography>
                 <CustomButton style={{ backgroundColor: blue[500] }} onClick={() => handleCommentChange(c.id, c.content)}>수정</CustomButton>
+                <CustomButton style={{ backgroundColor: red[500], marginLeft: 10 }} onClick={() => handleCommentDelete(c.id)}>삭제</CustomButton> {/* 삭제 버튼 추가 */}
               </CardContent>
             </Card>
           )))
