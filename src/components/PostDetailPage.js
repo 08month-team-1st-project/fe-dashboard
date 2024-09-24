@@ -30,7 +30,9 @@ const PostDetailPage = () => {
   async function fetchData() {
     await fetch('http://localhost:8080/api/comments')
     .then(res => res.json()).then(res => {
+      //console.log(res);
       if(!res) return;
+      //console.log(res.comments);
       setComments([...res.comments.filter(c => c?.post_id === post.id)])
     })
     .catch((err) => console.error(err));
@@ -39,12 +41,13 @@ const PostDetailPage = () => {
   useEffect(() => {
     const postData = JSON.parse(localStorage.getItem('post'));
     setPost({ ...postData });
-    try {
-      fetchData();
-    } catch (e) {
-      console.error(e)
-    }
   }, []);
+
+  useEffect(() => {
+    if (post?.id) {
+      fetchData();
+    }
+  }, [post]);
 
   const handlePostChange = async () => {
     await fetch(`http://localhost:8080/api/posts/${post.id}`, {
