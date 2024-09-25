@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {TextField, Typography} from '@mui/material';
 import {useNavigate} from 'react-router-dom';
 import {blue, CustomButton} from './CustomButton';
+import {red} from '@mui/material/colors';
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -158,6 +159,8 @@ const LoginPage = () => {
                               onClick={() => signupHandler(loginState.email, loginState.password)}>회원가입</CustomButton>
                 <CustomButton style={{backgroundColor: blue[500]}}
                               onClick={() => loginHandler(loginState.email, loginState.password)}>로그인</CustomButton>
+                <CustomButton style={{backgroundColor: red[500]}}
+                              onClick={() => navigate('/')}>홈</CustomButton>
             </div>
         </div>
     );
