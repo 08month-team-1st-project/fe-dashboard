@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {TextField, Typography} from '@mui/material';
 import {useNavigate} from 'react-router-dom';
 import {blue, CustomButton} from './CustomButton';
+import {red} from '@mui/material/colors';
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -30,7 +31,6 @@ const LoginPage = () => {
     };
 
 
-    // TODO 회원가입
     const signupHandler = async (email, password) => {
         setFieldErrors({email: [], password: []}); // 에러 초기화
         await fetch(`http://localhost:8080/api/signup`, {
@@ -65,12 +65,11 @@ const LoginPage = () => {
                 // 임시방편으로 catch 에서 정상로직 넣어두었음
 
                 alert("회원 가입을 축하드립니다!");
-                navigate('/');
                 //console.error('회원가입 중 오류가 발생했습니다.', error);
             });
     };
 
-    // TODO 로그인
+
     const loginHandler = async (email, password) => {
         setFieldErrors({email: [], password: []}); // 에러 초기화
         await fetch(`http://localhost:8080/api/login`, {
@@ -98,6 +97,7 @@ const LoginPage = () => {
 
                 } else {
                     localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('email', data.email);
                     navigate('/');
                 }
             })
@@ -160,6 +160,8 @@ const LoginPage = () => {
                               onClick={() => signupHandler(loginState.email, loginState.password)}>회원가입</CustomButton>
                 <CustomButton style={{backgroundColor: blue[500]}}
                               onClick={() => loginHandler(loginState.email, loginState.password)}>로그인</CustomButton>
+                <CustomButton style={{backgroundColor: red[500]}}
+                              onClick={() => navigate('/')}>홈</CustomButton>
             </div>
         </div>
     );
