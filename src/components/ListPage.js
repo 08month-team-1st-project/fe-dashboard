@@ -48,6 +48,38 @@ const ListPage = () => {
         fetchData();
     }, [page]); // 페이지가 변경될 때마다 fetch 호출
 
+    /**
+     * searchHandler ㅂㄷㅂㄷ
+     */
+    const searchHandler = async (email) => {
+        if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) return;
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/posts/search?author_email=${email}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const res = await response.json();
+
+            // 응답을 먼저 콘솔에 출력해서 확인
+            console.log(res);
+
+            // 응답에서 content와 totalPages가 있는지 확인
+            if (res && res.content) {
+                setPosts([...res.content]);
+                setTotalPages(res.totalPages); // 서버에서 총 페이지 수 받아오기
+            } else {
+                console.error('응답에 content가 없습니다.');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const handlePageChange = (newPage) => {
         if (newPage >= 0 && newPage < totalPages) {
             setPage(newPage); // 페이지 변경
@@ -55,7 +87,7 @@ const ListPage = () => {
     };
 
     const loginHandler = () => {
-        if(!localStorage.getItem("access_token")) {
+        if (!localStorage.getItem("access_token")) {
             navigate('/login');
             return;
         }
@@ -80,27 +112,8 @@ const ListPage = () => {
         }).catch((error) => console.error(error));
     };
 
-    const searchHandler = async (email) => {
-        if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) return;
-        const {posts} = await fetch(`http://localhost:8080/api/posts/search?author_email=${email}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(res => {
-                setPosts([...res.content]);
-                setTotalPages(res.totalPages); // 서버에서 총 페이지 수 받아오기
-            })
-            .catch((err) => console.error(err));
 
-        if (!posts) return;  //TODO
 
-        setPosts([...posts]);
-    };
 
     return (
         <div style={{padding: '40px'}}>
@@ -118,7 +131,7 @@ const ListPage = () => {
                     onClick={() => searchHandler(keyword)}>검색
                 </CustomButton>
 
-                {isLogin  &&
+                {isLogin &&
                     <CustomButton style={{backgroundColor: grey[400]}}>
                         {localStorage.getItem("email")} 님 환영합니다!
                     </CustomButton>
@@ -179,11 +192,11 @@ const ListPage = () => {
             </CustomButton>
 
             {isLogin ? (
-                <CustomButton
-                style={{backgroundColor: red[500]}}
-                onClick={logoutHandler}>
-                로그아웃
-            </CustomButton>) :
+                    <CustomButton
+                        style={{backgroundColor: red[500]}}
+                        onClick={logoutHandler}>
+                        로그아웃
+                    </CustomButton>) :
                 <CustomButton
                     style={{backgroundColor: red[500]}}
                     onClick={loginHandler}>
