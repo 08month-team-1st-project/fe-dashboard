@@ -30,7 +30,6 @@ const LoginPage = () => {
     };
 
 
-    // TODO 회원가입
     const signupHandler = async (email, password) => {
         setFieldErrors({email: [], password: []}); // 에러 초기화
         await fetch(`http://localhost:8080/api/signup`, {
@@ -65,12 +64,11 @@ const LoginPage = () => {
                 // 임시방편으로 catch 에서 정상로직 넣어두었음
 
                 alert("회원 가입을 축하드립니다!");
-                navigate('/');
                 //console.error('회원가입 중 오류가 발생했습니다.', error);
             });
     };
 
-    // TODO 로그인
+
     const loginHandler = async (email, password) => {
         setFieldErrors({email: [], password: []}); // 에러 초기화
         await fetch(`http://localhost:8080/api/login`, {
