@@ -18,6 +18,15 @@ const ListPage = () => {
     const [posts, setPosts] = useState([]);
     const [page, setPage] = useState(0); // 현재 페이지
     const [totalPages, setTotalPages] = useState(1); // 총 페이지 수
+    const [isLogin, setLogin] = useState(false);
+
+
+    useEffect(() => {
+        if (localStorage.getItem("access_token")) {
+            setLogin(true);
+        }
+    })
+
 
     useEffect(() => {
         async function fetchData() {
@@ -45,6 +54,13 @@ const ListPage = () => {
         }
     };
 
+    const loginHandler = () => {
+        if(!localStorage.getItem("access_token")) {
+            navigate('/login');
+            return;
+        }
+    }
+
     const logoutHandler = async () => {
         const email = localStorage.getItem('email');
         if (!email) {
@@ -57,6 +73,8 @@ const ListPage = () => {
                 email
             })
         }).then(res => res.json()).then(() => {
+
+            localStorage.removeItem("access_token");
             navigate('/login');
         }).catch((error) => console.error(error));
     };
@@ -84,7 +102,7 @@ const ListPage = () => {
     };
 
     return (
-        <div style={{ padding: '40px' }}>
+        <div style={{padding: '40px'}}>
             <h1>게시판 리스트</h1>
             <div>
                 <TextField
@@ -95,11 +113,11 @@ const ListPage = () => {
                     onChange={(event) => setKeyword(event.target.value)}
                 />
                 <CustomButton
-                    style={{ backgroundColor: blue[500] }}
+                    style={{backgroundColor: blue[500]}}
                     onClick={() => searchHandler(keyword)}>검색
                 </CustomButton>
             </div>
-            <Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <Table sx={{minWidth: 650}} aria-label="simple table">
                 <TableHead>
                     <TableRow>
                         <TableCell></TableCell>
@@ -114,14 +132,16 @@ const ListPage = () => {
                     {posts.map(post => (
                         <TableRow
                             key={post.id}
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                            sx={{'&:last-child td, &:last-child th': {border: 0}}}
                             onClick={() => {
-                                localStorage.setItem('post', JSON.stringify({ ...post }))
+                                localStorage.setItem('post', JSON.stringify({...post}))
                                 navigate(`/post/${post.id}`)
                             }}
                         >
-                            <TableCell component="th" scope="row">{post.id}</TableCell>
-                            <TableCell component="th" scope="row">{post.title}</TableCell>
+                            <TableCell component="th"
+                                       scope="row">{post.id}</TableCell>
+                            <TableCell component="th"
+                                       scope="row">{post.title}</TableCell>
                             <TableCell>{post.content}</TableCell>
                             <TableCell>{post.author}</TableCell>
                             <TableCell>{post.created_at}</TableCell>
@@ -132,7 +152,7 @@ const ListPage = () => {
             </Table>
 
             {/* 페이지네이션 버튼 */}
-            <div style={{ marginTop: '20px' }}>
+            <div style={{marginTop: '20px'}}>
                 <Button
                     onClick={() => handlePageChange(page - 1)}
                     disabled={page === 0}>이전
@@ -145,13 +165,23 @@ const ListPage = () => {
             </div>
 
             <CustomButton
-                style={{ backgroundColor: blue[500] }}
+                style={{backgroundColor: blue[500]}}
                 onClick={() => navigate('/post/create')}>게시글 작성
             </CustomButton>
-            <CustomButton
-                style={{ backgroundColor: red[500] }}
-                onClick={logoutHandler}>로그아웃
-            </CustomButton>
+
+            {isLogin ? (            
+                <CustomButton
+                style={{backgroundColor: red[500]}}
+                onClick={logoutHandler}>
+                로그아웃
+            </CustomButton>) :
+                <CustomButton
+                    style={{backgroundColor: red[500]}}
+                    onClick={loginHandler}>
+                    로그인
+                </CustomButton>
+            }
+
         </div>
     );
 };
