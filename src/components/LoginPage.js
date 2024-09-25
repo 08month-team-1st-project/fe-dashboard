@@ -97,6 +97,7 @@ const LoginPage = () => {
 
                 } else {
                     localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('email', data.email);
                     navigate('/');
                 }
             })

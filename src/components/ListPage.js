@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {blue, CustomButton} from './CustomButton';
 import {useNavigate} from 'react-router-dom';
-import {red} from '@mui/material/colors';
+import {red, grey} from '@mui/material/colors';
 import {
     Table,
     TableBody,
@@ -9,7 +9,7 @@ import {
     TableHead,
     TableRow,
     TextField,
-    Button
+    Button, colors
 } from '@mui/material';
 
 const ListPage = () => {
@@ -75,6 +75,7 @@ const ListPage = () => {
         }).then(res => res.json()).then(() => {
 
             localStorage.removeItem("access_token");
+            localStorage.removeItem("email");
             navigate('/login');
         }).catch((error) => console.error(error));
     };
@@ -116,6 +117,14 @@ const ListPage = () => {
                     style={{backgroundColor: blue[500]}}
                     onClick={() => searchHandler(keyword)}>검색
                 </CustomButton>
+
+                {isLogin  &&
+                    <CustomButton style={{backgroundColor: grey[400]}}>
+                        {localStorage.getItem("email")} 님 환영합니다!
+                    </CustomButton>
+                }
+
+
             </div>
             <Table sx={{minWidth: 650}} aria-label="simple table">
                 <TableHead>
@@ -169,7 +178,7 @@ const ListPage = () => {
                 onClick={() => navigate('/post/create')}>게시글 작성
             </CustomButton>
 
-            {isLogin ? (            
+            {isLogin ? (
                 <CustomButton
                 style={{backgroundColor: red[500]}}
                 onClick={logoutHandler}>
