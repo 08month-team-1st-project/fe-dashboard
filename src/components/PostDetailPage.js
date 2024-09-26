@@ -59,12 +59,12 @@ const PostDetailPage = () => {
             const repliesResponse = await fetch(`http://localhost:8080/api/replies?comment_id=${comment.id}`);
             const repliesData = await repliesResponse.json();
             console.log(repliesData);
-            return { commentId: comment.id, replies: repliesData.reply};
+            return {commentId: comment.id, replies: repliesData.reply};
 
         });
 
         const repliesData = await Promise.all(repliesPromises);
-        const repliesMap = repliesData.reduce((acc, { commentId, replies }) => {
+        const repliesMap = repliesData.reduce((acc, {commentId, replies}) => {
             acc[commentId] = replies;
             return acc;
         }, {});
@@ -78,9 +78,9 @@ const PostDetailPage = () => {
     }, []);
 
     useEffect(() => {
-         if (post?.id) {
-           fetchData();
-           }
+        if (post?.id) {
+            fetchData();
+        }
     }, [post]);
 
     const handlePostChange = async () => {
@@ -129,17 +129,19 @@ const PostDetailPage = () => {
                 content: content
             })
         }).then(res => {
-          const status = res.status;
+            const status = res.status;
 
-          if (status === 200) {
-            alert("댓글이 수정되었습니다!");
+            if (status === 200) {
+                alert("댓글이 수정되었습니다!");
+                return res.json();
+            } else if (status === 401) {
+                alert("로그인이 필요합니다.");
+                navigate('/login');
+            }
             return res.json();
-          } else if (status === 401) {
-            alert("로그인이 필요합니다.");
-            navigate('/login');
-          }
-          return res.json();
-        }).then(data=>{alert(data.message)})
+        }).then(data => {
+            alert(data.message)
+        })
             .catch((err) => console.error(err));
     };
 
@@ -169,12 +171,15 @@ const PostDetailPage = () => {
                 post_id: post.id
             })
         }).then(res => {
-          const status = res.status;
-           if (status === 401) {
-            alert("로그인이 필요합니다.");
-            navigate('/login');
-          }
-          return res.json();
+            const status = res.status;
+            if (status === 401) {
+                alert("로그인이 필요합니다.");
+                navigate('/login');
+                return res.json();
+            } else if (status === 200) {
+                window.location.reload();
+            }
+
         }).catch((err) => console.error(err));
     }
 
@@ -188,20 +193,22 @@ const PostDetailPage = () => {
                 'Authorization': localStorage.getItem("access_token")
             }
         }).then(res => {
-          const status = res.status;
+            const status = res.status;
 
-          if (status === 200) {
-            alert("댓글이 삭제되었습니다!");
+            if (status === 200) {
+                alert("댓글이 삭제되었습니다!");
+                return res.json();
+            } else if (status === 401) {
+                alert("로그인이 필요합니다.");
+                navigate('/login');
+            }
             return res.json();
-          } else if (status === 401) {
-            alert("로그인이 필요합니다.");
-            navigate('/login');
-          }
-          return res.json();
-        }).then(data=>{alert(data.message)})
+        }).then(data => {
+            alert(data.message)
+        })
             .then(() => {
-            setComments(comments.filter(c => c.id !== id)); // 로컬 상태에서 댓글 삭제
-        }).catch((err) => console.error(err));
+                setComments(comments.filter(c => c.id !== id)); // 로컬 상태에서 댓글 삭제
+            }).catch((err) => console.error(err));
     }
 
     const submitReply = async (commentId) => {
@@ -230,7 +237,7 @@ const PostDetailPage = () => {
                 [commentId]: [...(prev[commentId] || []), reply] // 새로운 답글 추가
             }));
             // 답글 입력 필드 초기화
-            setNewReply(prev => ({ ...prev, [commentId]: {} }));
+            setNewReply(prev => ({...prev, [commentId]: {}}));
         }).catch(err => console.error(err));
     };
 
@@ -263,7 +270,9 @@ const PostDetailPage = () => {
                 navigate('/login');
             }
             return res.json();
-        }).then(data=>{alert(data.message)})
+        }).then(data => {
+            alert(data.message)
+        })
             .then(() => {
                 setComments(comments.filter(c => c.id !== id)); // 로컬 상태에서 댓글 삭제
             }).catch((err) => console.error(err));
@@ -372,13 +381,13 @@ const PostDetailPage = () => {
                 <Card sx={{marginBottom: 2}}>
                     <CardContent
                         style={{display: 'flex', flexDirection: 'column'}}>
-                        <h3>댓글 작성자</h3>
-                        <TextField variant="outlined"
-                                   value={newComment.author || ''}
-                                   onChange={(event) => setNewCommnent(prev => ({
-                                       ...prev,
-                                       author: event.target.value
-                                   }))}/>
+                        {/*<h3>댓글 작성자</h3>*/}
+                        {/*<TextField variant="outlined"*/}
+                        {/*           value={newComment.author || ''}*/}
+                        {/*           onChange={(event) => setNewCommnent(prev => ({*/}
+                        {/*               ...prev,*/}
+                        {/*               author: event.target.value*/}
+                        {/*           }))}/>*/}
                         <h3>댓글 내용</h3>
                         <TextField variant="outlined"
                                    value={newComment.content || ''}
@@ -408,52 +417,72 @@ const PostDetailPage = () => {
                                     {c?.created_at || ''}
                                 </Typography>
                                 {(localStorage.getItem("email") === c?.author) &&
-                                <CustomButton
-                                    style={{backgroundColor: blue[500]}}
-                                    onClick={() => handleCommentChange(c.id, c.content)}>수정</CustomButton>}
-                                {(localStorage.getItem("email") === c?.author) &&
-                                <CustomButton
-                                    style={{ backgroundColor: red[500], marginLeft: 10 }}
-                                    onClick={() => handleCommentDelete(c.id)}>삭제</CustomButton>} {/* 삭제 버튼 추가 */}
-                                <CustomButton
-                                  style={{ backgroundColor: blue[500], marginLeft: 10 }}
-                                  onClick={() => toggleReplyForm(c.id)}>답글</CustomButton>
-                              {/* 답글 입력 폼 (토글 상태에 따라 표시) */}
-                              {replyFormVisible[c.id] && (
-                                  <div style={{ marginTop: '10px', paddingLeft: '20px' }}>
-                                    <TextField
-                                        variant="outlined"
-                                        label="답글 작성자"
-                                        value={newReply[c.id]?.author || ''}
-                                        onChange={(e) => handleReplyChange(c.id, 'author', e.target.value)}
-                                    />
-                                    <TextField
-                                        variant="outlined"
-                                        label="답글 내용"
-                                        value={newReply[c.id]?.content || ''}
-                                        onChange={(e) => handleReplyChange(c.id, 'content', e.target.value)}
-                                    />
                                     <CustomButton
-                                        style={{ backgroundColor: blue[500], marginTop: '10px' }}
-                                        onClick={() => submitReply(c.id)}
-                                    >
-                                      답글 생성
-                                    </CustomButton>
-                                  </div>
-                              )}
+                                        style={{backgroundColor: blue[500]}}
+                                        onClick={() => handleCommentChange(c.id, c.content)}>수정</CustomButton>}
+                                {(localStorage.getItem("email") === c?.author) &&
+                                    <CustomButton
+                                        style={{
+                                            backgroundColor: red[500],
+                                            marginLeft: 10
+                                        }}
+                                        onClick={() => handleCommentDelete(c.id)}>삭제</CustomButton>} {/* 삭제 버튼 추가 */}
+                                <CustomButton
+                                    style={{
+                                        backgroundColor: blue[500],
+                                        marginLeft: 10
+                                    }}
+                                    onClick={() => toggleReplyForm(c.id)}>답글</CustomButton>
+                                {/* 답글 입력 폼 (토글 상태에 따라 표시) */}
+                                {replyFormVisible[c.id] && (
+                                    <div style={{
+                                        marginTop: '10px',
+                                        paddingLeft: '20px'
+                                    }}>
+                                        <TextField
+                                            variant="outlined"
+                                            label="답글 작성자"
+                                            value={newReply[c.id]?.author || ''}
+                                            onChange={(e) => handleReplyChange(c.id, 'author', e.target.value)}
+                                        />
+                                        <TextField
+                                            variant="outlined"
+                                            label="답글 내용"
+                                            value={newReply[c.id]?.content || ''}
+                                            onChange={(e) => handleReplyChange(c.id, 'content', e.target.value)}
+                                        />
+                                        <CustomButton
+                                            style={{
+                                                backgroundColor: blue[500],
+                                                marginTop: '10px'
+                                            }}
+                                            onClick={() => submitReply(c.id)}
+                                        >
+                                            답글 생성
+                                        </CustomButton>
+                                    </div>
+                                )}
                                 {/* 답글 목록 */}
                                 {replies[c.id]?.map(reply => (
-                                    <div key={reply.id} style={{ marginTop: '10px', paddingLeft: '40px' }}>
+                                    <div key={reply.id} style={{
+                                        marginTop: '10px',
+                                        paddingLeft: '40px'
+                                    }}>
                                         <Typography>{reply.content}</Typography>
-                                        <Typography color="text.secondary">작성자: {reply.memberEmail}</Typography>
-                                        <Typography color="text.secondary">{reply.created_at || ''}</Typography>
+                                        <Typography
+                                            color="text.secondary">작성자: {reply.memberEmail}</Typography>
+                                        <Typography
+                                            color="text.secondary">{reply.created_at || ''}</Typography>
                                         {(localStorage.getItem("email") === reply.memberEmail) &&
                                             <CustomButton
                                                 style={{backgroundColor: blue[500]}}
                                                 onClick={() => handleReplyChange(reply.id, reply.content)}>수정</CustomButton>}
                                         {(localStorage.getItem("email") === reply.memberEmail) &&
                                             <CustomButton
-                                                style={{ backgroundColor: red[500], marginLeft: 10 }}
+                                                style={{
+                                                    backgroundColor: red[500],
+                                                    marginLeft: 10
+                                                }}
                                                 onClick={() => handleReplyDelete(reply.id)}>삭제</CustomButton>}
                                     </div>
                                 ))}
