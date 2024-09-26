@@ -123,7 +123,7 @@ const PostDetailPage = () => {
             return res.json();
           } else if (status === 401) {
             alert("로그인이 필요합니다.");
-            navigate('/post');
+            navigate('/');
           }
           return res.json();
         }).catch((err) => console.error(err));
@@ -158,7 +158,7 @@ const PostDetailPage = () => {
           const status = res.status;
            if (status === 401) {
             alert("로그인이 필요합니다.");
-            navigate('/post');
+            navigate('/');
           }
           return res.json();
         }).catch((err) => console.error(err));
@@ -181,7 +181,7 @@ const PostDetailPage = () => {
             return res.json();
           } else if (status === 401) {
             alert("로그인이 필요합니다.");
-            navigate('/post');
+            navigate('/');
           }
           return res.json();
         }).then(() => {
@@ -349,10 +349,12 @@ const PostDetailPage = () => {
                         <Card sx={{marginBottom: 2}}>
                             <CardContent>
                                 <TextField variant="outlined"
+                                           style={{width: 500}}
+                                           multiline
                                            value={c?.content || ''}
                                            onChange={(event) => changeComment(c.id, event.target.value)}/>
-                                <Typography variant="h5" component="div">
-                                    {c?.author || ''}
+                                <Typography component="div">
+                                    {"작성자: " + c?.author || ''}
                                 </Typography>
                                 <Typography color="text.secondary">
                                     {c?.created_at || ''}
