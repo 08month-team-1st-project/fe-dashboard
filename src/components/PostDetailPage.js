@@ -178,9 +178,18 @@ const PostDetailPage = () => {
                 return res.json();
             } else if (status === 200) {
                 window.location.reload();
+                return res.json();
+            }else {
+                return res.json();
             }
 
-        }).catch((err) => console.error(err));
+        }).then(res => {
+                if (res.field_errors) {
+                    alert(res.field_errors[0].message);
+                    return;
+                }
+            }
+        ).catch((err) => console.error(err));
     }
 
 
