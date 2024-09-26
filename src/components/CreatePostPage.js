@@ -24,53 +24,68 @@ const CreatePostPage = () => {
 
         const [fieldErrors, setFieldErrors] = useState({title: [], content: []}); // 필드별 에러 메시지를 배열로 관리
 
-        // 필드 에러 설정 함수
-        const handleFieldErrors = (errors) => {
-            const newFieldErrors = {title: [], content: []};
-            errors.forEach(error => {
-                if (error.field === 'email') {
-                    newFieldErrors.title.push(error.message); // 이메일 필드의 모든 에러 메시지 추가
-                } else if (error.field === 'password') {
-                    newFieldErrors.content.push(error.message); // 비밀번호 필드의 모든 에러 메시지 추가
-                }
-            });
-            setFieldErrors(newFieldErrors);
-        };
+    // 필드 에러 설정 함수
+    const handleFieldErrors = (errors) => {
+        const newFieldErrors = {title: [], content: []};
+        errors.forEach(error => {
+            if (error.field === 'email') {
+                newFieldErrors.title.push(error.message); // title 필드의 모든 에러 메시지 추가
+            } else if (error.field === 'password') {
+                newFieldErrors.content.push(error.message); // content 필드의 모든 에러 메시지 추가
+            }
+        });
+        setFieldErrors(newFieldErrors);
+    };
 
-        const submitPost = async () => {
-            await fetch(`http://localhost:8080/api/posts`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Authorization': localStorage.getItem("access_token")
-                },
-                body: JSON.stringify({
-                    title: post?.title || '',
-                    content: post?.content || ''
-                })
-            }).then(
-                res => {
-                    if (res.status === 401) {
-                        alert("로그인이 필요합니다.");
-                        navigate('/login');
-                    } else if (res.status === 200) {
-                        alert("게시물이 성공적으로 작성되었습니다.");
-                        navigate('/');
+
+
+    const submitPost = async () => {
+        await fetch(`http://localhost:8080/api/posts`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem("access_token")
+            },
+            body: JSON.stringify({
+                title: post?.title || '',
+                content: post?.content || ''
+            })
+        })
+            .then(res => {
+                if (res.status === 401) {
+                    alert("로그인이 필요합니다.");
+                    navigate('/login');
+                    return null;  // 이후의 then 체인을 중단하기 위해 null 반환
+                } else if (res.status === 200) {
+                    alert("게시물이 성공적으로 작성되었습니다.");
+                    navigate('/');
+                    return null;  // 이후의 then 체인을 중단하기 위해 null 반환
+                } else {
+                    return res.json();  // 401, 200 이외의 경우에만 JSON 변환
+                }
+            })
+            .then((data) => {
+
+                console.log(data); //확인용
+                if (data) {
+                    if (data.field_errors) {
+                        handleFieldErrors(data);
+                    } else {
+
+                        alert("알 수 없는 오류가 발생했습니다.");
                     }
                 }
-            )
-                .then(res => res.json())  // Error 이 부분에서 TypeError: Cannot read properties of undefined (reading 'json')
-                .then((data) => {
-                        if (data.field_errors) {
-                            handleFieldErrors(data);
-                        }
-                    }
-                )
-                .catch((err) => {
-                    console.error(err);
-                })
-        }
+            })
+            .catch((err) => {
+                console.error(err);
+
+                // 필드 에러 랜더링이 안돼서 , 제출을 위한 임시방편의 알림창
+                alert("게시글 작성 실패 [제목: 5 ~ 30자] [내용: 5 ~ 500자]");
+            });
+    }
+
+
         return (
             <div style={{
                 padding: '40px'
