@@ -52,7 +52,10 @@ const ListPage = () => {
      * searchHandler ㅂㄷㅂㄷ
      */
     const searchHandler = async (email) => {
-        if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) return;
+        if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)){
+            alert("이메일 형식으로 입력해주세요")
+            return;
+        } 
 
         try {
             const response = await fetch(`http://localhost:8080/api/posts/search?author_email=${email}`, {
@@ -68,11 +71,12 @@ const ListPage = () => {
             // 응답을 먼저 콘솔에 출력해서 확인
             console.log(res);
 
-            // 응답에서 content와 totalPages가 있는지 확인
-            if (res && res.content) {
+            // 응답에서 content와 totalPages가 있는지 확인 + 서버에서 가져온 post 데이터의 존재 여부
+            if (res && res.content && res.content.length > 0) {
                 setPosts([...res.content]);
                 setTotalPages(res.totalPages); // 서버에서 총 페이지 수 받아오기
             } else {
+                alert("게시글이 없습니다."); // 데이터 없을 때도 왜 길이가 10..?
                 console.error('응답에 content가 없습니다.');
             }
         } catch (err) {
@@ -144,10 +148,10 @@ const ListPage = () => {
                     <TableRow>
                         <TableCell></TableCell>
                         <TableCell>제목</TableCell>
-                        <TableCell>게시물내용</TableCell>
+                        {/*<TableCell>게시물내용</TableCell>*/}
                         <TableCell>작성자</TableCell>
                         <TableCell>작성일시</TableCell>
-                        <TableCell>좋아요</TableCell>
+                        {/*<TableCell>좋아요</TableCell>*/}
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -164,10 +168,10 @@ const ListPage = () => {
                                        scope="row">{post.id}</TableCell>
                             <TableCell component="th"
                                        scope="row">{post.title}</TableCell>
-                            <TableCell>{post.content}</TableCell>
+                            {/*<TableCell>{post.content}</TableCell>*/}
                             <TableCell>{post.author}</TableCell>
                             <TableCell>{post.created_at}</TableCell>
-                            <TableCell>{post.like_count}</TableCell>
+                            {/*<TableCell>{post.like_count}</TableCell>*/}
                         </TableRow>
                     ))}
                 </TableBody>
@@ -177,12 +181,27 @@ const ListPage = () => {
             <div style={{marginTop: '20px'}}>
                 <Button
                     onClick={() => handlePageChange(page - 1)}
-                    disabled={page === 0}>이전
+                    disabled={page === 0}>
+                    이전
                 </Button>
-                <span>페이지 {page + 1} / {totalPages}</span>
+
+                {Array.from({ length: totalPages }, (_, i) => (
+                    <Button
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                        style={{
+                            fontWeight: page === i ? 'bold' : 'normal',
+                            textDecoration: page === i ? 'underline' : 'none'
+                        }}
+                    >
+                        {i + 1}
+                    </Button>
+                ))}
+
                 <Button
                     onClick={() => handlePageChange(page + 1)}
-                    disabled={page === totalPages - 1}>다음
+                    disabled={page === totalPages - 1}>
+                    다음
                 </Button>
             </div>
 
