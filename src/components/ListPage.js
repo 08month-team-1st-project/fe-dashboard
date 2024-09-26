@@ -52,7 +52,10 @@ const ListPage = () => {
      * searchHandler ㅂㄷㅂㄷ
      */
     const searchHandler = async (email) => {
-        if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) return;
+        if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)){
+            alert("이메일 형식으로 입력해주세요")
+            return;
+        } 
 
         try {
             const response = await fetch(`http://localhost:8080/api/posts/search?author_email=${email}`, {
@@ -68,11 +71,12 @@ const ListPage = () => {
             // 응답을 먼저 콘솔에 출력해서 확인
             console.log(res);
 
-            // 응답에서 content와 totalPages가 있는지 확인
-            if (res && res.content) {
+            // 응답에서 content와 totalPages가 있는지 확인 + 서버에서 가져온 post 데이터의 존재 여부
+            if (res && res.content && res.content.length > 0) {
                 setPosts([...res.content]);
                 setTotalPages(res.totalPages); // 서버에서 총 페이지 수 받아오기
             } else {
+                alert("게시글이 없습니다."); // 데이터 없을 때도 왜 길이가 10..?
                 console.error('응답에 content가 없습니다.');
             }
         } catch (err) {
