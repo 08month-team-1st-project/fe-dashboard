@@ -126,7 +126,8 @@ const PostDetailPage = () => {
             navigate('/login');
           }
           return res.json();
-        }).catch((err) => console.error(err));
+        }).then(data=>{alert(data.message)})
+            .catch((err) => console.error(err));
     };
 
     const changeComment = (commentId, comment) => {
@@ -184,7 +185,8 @@ const PostDetailPage = () => {
             navigate('/login');
           }
           return res.json();
-        }).then(() => {
+        }).then(data=>{alert(data.message)})
+            .then(() => {
             setComments(comments.filter(c => c.id !== id)); // 로컬 상태에서 댓글 삭제
         }).catch((err) => console.error(err));
     }
@@ -249,6 +251,10 @@ const PostDetailPage = () => {
                 생성일자: {post.created_at}</CustomButton>
 
 
+            {/*게시글 데이터 자체를 api 요청이 아닌 로컬스토리지에서 꺼내오는 방식으로 돼있어서,
+            게시글 수정해도, 화면에 db에 반영된 수정일자가 반영되진 않는다.
+            보려면 홈(게시글목록) 으로 갔다가 목록에 나온 게시글을 다시 클릭해서 접근해야 반영됨
+            */}
             {(localStorage.getItem("email") === post.author) &&
                 <CustomButton style={{backgroundColor: grey[400]}}
                 >수정일자 {post.modified_at}</CustomButton>}
@@ -305,6 +311,9 @@ const PostDetailPage = () => {
                                   onClick={handlePostChange}>수정</CustomButton>
                 }
 
+                {/*취소버튼을 누르면 새로고침, 글 수정 중에 새로고침하면 원래 내용으로 돌아간다*/}
+                {/*게시글 상세페이지의 post 데이터 자체가 로컬 스토리지에 저장해놨던 걸 가져오게끔 해놔서,
+                게시글 수정 후 db에 반영된 데이터를 화면에 반영시켜주진 못함*/}
                 {(localStorage.getItem("email") === post.author) &&
                     <CustomButton style={{backgroundColor: red[500]}}
                                   onClick={() => window.location.reload()}>취소
@@ -352,12 +361,14 @@ const PostDetailPage = () => {
                                 <Typography color="text.secondary">
                                     {c?.created_at || ''}
                                 </Typography>
+                                {(localStorage.getItem("email") === c?.author) &&
                                 <CustomButton
                                     style={{backgroundColor: blue[500]}}
-                                    onClick={() => handleCommentChange(c.id, c.content)}>수정</CustomButton>
+                                    onClick={() => handleCommentChange(c.id, c.content)}>수정</CustomButton>}
+                                {(localStorage.getItem("email") === c?.author) &&
                                 <CustomButton
                                     style={{ backgroundColor: red[500], marginLeft: 10 }}
-                                    onClick={() => handleCommentDelete(c.id)}>삭제</CustomButton> {/* 삭제 버튼 추가 */}
+                                    onClick={() => handleCommentDelete(c.id)}>삭제</CustomButton>} {/* 삭제 버튼 추가 */}
                                 <CustomButton
                                   style={{ backgroundColor: blue[500], marginLeft: 10 }}
                                   onClick={() => toggleReplyForm(c.id)}>답글</CustomButton>
