@@ -147,7 +147,7 @@ const ListPage = () => {
                         {/*<TableCell>게시물내용</TableCell>*/}
                         <TableCell>작성자</TableCell>
                         <TableCell>작성일시</TableCell>
-                        <TableCell>좋아요</TableCell>
+                        {/*<TableCell>좋아요</TableCell>*/}
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -167,7 +167,7 @@ const ListPage = () => {
                             {/*<TableCell>{post.content}</TableCell>*/}
                             <TableCell>{post.author}</TableCell>
                             <TableCell>{post.created_at}</TableCell>
-                            <TableCell>{post.like_count}</TableCell>
+                            {/*<TableCell>{post.like_count}</TableCell>*/}
                         </TableRow>
                     ))}
                 </TableBody>
