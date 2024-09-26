@@ -48,17 +48,15 @@ const ListPage = () => {
         fetchData();
     }, [page]); // 페이지가 변경될 때마다 fetch 호출
 
-    /**
-     * searchHandler ㅂㄷㅂㄷ
-     */
+
     const searchHandler = async (email) => {
         if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)){
             alert("이메일 형식으로 입력해주세요")
             return;
-        } 
+        }
 
         try {
-            const response = await fetch(`http://localhost:8080/api/posts/search?author_email=${email}`, {
+            const response = await fetch(`http://localhost:8080/api/posts/search?page=${page}&size=10&sort=createdAt,desc&author_email=${email}`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
