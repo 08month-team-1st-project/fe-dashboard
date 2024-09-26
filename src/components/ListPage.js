@@ -177,12 +177,27 @@ const ListPage = () => {
             <div style={{marginTop: '20px'}}>
                 <Button
                     onClick={() => handlePageChange(page - 1)}
-                    disabled={page === 0}>이전
+                    disabled={page === 0}>
+                    이전
                 </Button>
-                <span>페이지 {page + 1} / {totalPages}</span>
+
+                {Array.from({ length: totalPages }, (_, i) => (
+                    <Button
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                        style={{
+                            fontWeight: page === i ? 'bold' : 'normal',
+                            textDecoration: page === i ? 'underline' : 'none'
+                        }}
+                    >
+                        {i + 1}
+                    </Button>
+                ))}
+
                 <Button
                     onClick={() => handlePageChange(page + 1)}
-                    disabled={page === totalPages - 1}>다음
+                    disabled={page === totalPages - 1}>
+                    다음
                 </Button>
             </div>
 
