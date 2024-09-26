@@ -360,9 +360,6 @@ const PostDetailPage = () => {
                                   onClick={handlePostChange}>수정</CustomButton>
                 }
 
-                {/*취소버튼을 누르면 새로고침, 글 수정 중에 새로고침하면 원래 내용으로 돌아간다*/}
-                {/*게시글 상세페이지의 post 데이터 자체가 로컬 스토리지에 저장해놨던 걸 가져오게끔 해놔서,
-                게시글 수정 후 db에 반영된 데이터를 화면에 반영시켜주진 못함*/}
                 {(localStorage.getItem("email") === post.author) &&
                     <CustomButton style={{backgroundColor: red[500]}}
                                   onClick={() => window.location.reload()}>취소
