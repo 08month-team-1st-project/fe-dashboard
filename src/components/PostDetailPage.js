@@ -8,20 +8,7 @@ import {useNavigate, useLocation, redirect} from 'react-router-dom';
 const PostDetailPage = () => {
     const navigate = useNavigate();
     const [post, setPost] = useState({});
-    const [comments, setComments] = useState([{
-        id: 1,
-        content: '댓글 내용',
-        author: '작성자1',
-        post_id: 1,
-        created_at: '작성일시'
-    },
-        {
-            id: 2,
-            content: '댓글 내용',
-            author: '작성자2',
-            post_id: 1,
-            created_at: '작성일시'
-        }]);
+    const [comments, setComments] = useState({});
     const [newComment, setNewCommnent] = useState({
         content: '',
         author: ''
@@ -65,8 +52,9 @@ const PostDetailPage = () => {
             }
         )
             .then(res => res.json()).then(res => {
+              console.log(res);
                 if (!res) return;
-                setComments([...res.content.filter(c => c?.post_id === post.id)])
+                setComments([...res.comments.filter(c => c?.post_id === post.id)])
             })
             .catch((err) => console.error(err));
     }
@@ -74,12 +62,13 @@ const PostDetailPage = () => {
     useEffect(() => {
         const postData = JSON.parse(localStorage.getItem('post'));
         setPost({...postData});
-        try {
-            fetchData();
-        } catch (e) {
-            console.error(e)
-        }
     }, []);
+
+    useEffect(() => {
+         if (post?.id) {
+           fetchData();
+           }
+    }, [post]);
 
     const handlePostChange = async () => {
         await fetch(`http://localhost:8080/api/posts/${post.id}`, {
@@ -126,6 +115,17 @@ const PostDetailPage = () => {
             body: JSON.stringify({
                 content: content
             })
+        }).then(res => {
+          const status = res.status;
+
+          if (status === 200) {
+            alert("댓글이 수정되었습니다!");
+            return res.json();
+          } else if (status === 401) {
+            alert("로그인이 필요합니다.");
+            navigate('/post');
+          }
+          return res.json();
         }).catch((err) => console.error(err));
     };
 
@@ -154,6 +154,13 @@ const PostDetailPage = () => {
                 content: newComment.content,
                 post_id: post.id
             })
+        }).then(res => {
+          const status = res.status;
+           if (status === 401) {
+            alert("로그인이 필요합니다.");
+            navigate('/post');
+          }
+          return res.json();
         }).catch((err) => console.error(err));
     }
 
@@ -166,6 +173,17 @@ const PostDetailPage = () => {
                 'Content-Type': 'application/json',
                 'Authorization': localStorage.getItem("access_token")
             }
+        }).then(res => {
+          const status = res.status;
+
+          if (status === 200) {
+            alert("댓글이 삭제되었습니다!");
+            return res.json();
+          } else if (status === 401) {
+            alert("로그인이 필요합니다.");
+            navigate('/post');
+          }
+          return res.json();
         }).then(() => {
             setComments(comments.filter(c => c.id !== id)); // 로컬 상태에서 댓글 삭제
         }).catch((err) => console.error(err));
@@ -342,6 +360,35 @@ const PostDetailPage = () => {
                                 <CustomButton
                                     style={{backgroundColor: blue[500]}}
                                     onClick={() => handleCommentChange(c.id, c.content)}>수정</CustomButton>
+                                <CustomButton
+                                    style={{ backgroundColor: red[500], marginLeft: 10 }}
+                                    onClick={() => handleCommentDelete(c.id)}>삭제</CustomButton> {/* 삭제 버튼 추가 */}
+                                <CustomButton
+                                  style={{ backgroundColor: blue[500], marginLeft: 10 }}
+                                  onClick={() => toggleReplyForm(c.id)}>답글</CustomButton>
+                              {/* 답글 입력 폼 (토글 상태에 따라 표시) */}
+                              {replyFormVisible[c.id] && (
+                                  <div style={{ marginTop: '10px', paddingLeft: '20px' }}>
+                                    <TextField
+                                        variant="outlined"
+                                        label="답글 작성자"
+                                        value={newReply[c.id]?.author || ''}
+                                        onChange={(e) => handleReplyChange(c.id, 'author', e.target.value)}
+                                    />
+                                    <TextField
+                                        variant="outlined"
+                                        label="답글 내용"
+                                        value={newReply[c.id]?.content || ''}
+                                        onChange={(e) => handleReplyChange(c.id, 'content', e.target.value)}
+                                    />
+                                    <CustomButton
+                                        style={{ backgroundColor: blue[500], marginTop: '10px' }}
+                                        onClick={() => submitReply(c.id)}
+                                    >
+                                      답글 생성
+                                    </CustomButton>
+                                  </div>
+                              )}
                             </CardContent>
                         </Card>
                     )))
