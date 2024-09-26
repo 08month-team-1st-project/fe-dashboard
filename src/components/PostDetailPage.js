@@ -179,7 +179,7 @@ const PostDetailPage = () => {
             } else if (status === 200) {
                 window.location.reload();
                 return res.json();
-            }else {
+            } else {
                 return res.json();
             }
 
@@ -235,18 +235,26 @@ const PostDetailPage = () => {
             })
         }).then(res => {
             if (res.ok) {
-                return res.json();
+                window.location.reload();
+            } else if (res.status === 401) {
+                alert("로그인이 필요합니다.")
+                navigate("/login")
+
             } else {
-                throw new Error("Failed to submit reply");
+                return res.json();
             }
         }).then(reply => {
-            // 답글이 성공적으로 생성된 경우
-            setReplies(prev => ({
-                ...prev,
-                [commentId]: [...(prev[commentId] || []), reply] // 새로운 답글 추가
-            }));
-            // 답글 입력 필드 초기화
-            setNewReply(prev => ({...prev, [commentId]: {}}));
+
+            if (reply.field_errors) {
+                alert(reply.field_errors[0].message);
+                return;
+            }
+            // setReplies(prev => ({
+            //     ...prev,
+            //     [commentId]: [...(prev[commentId] || []), reply] // 새로운 답글 추가
+            // }));
+            // // 답글 입력 필드 초기화
+            // setNewReply(prev => ({...prev, [commentId]: {}}));
         }).catch(err => console.error(err));
     };
 
@@ -448,12 +456,12 @@ const PostDetailPage = () => {
                                         marginTop: '10px',
                                         paddingLeft: '20px'
                                     }}>
-                                        <TextField
-                                            variant="outlined"
-                                            label="답글 작성자"
-                                            value={newReply[c.id]?.author || ''}
-                                            onChange={(e) => handleReplyChange(c.id, 'author', e.target.value)}
-                                        />
+                                        {/*<TextField*/}
+                                        {/*    variant="outlined"*/}
+                                        {/*    label="답글 작성자"*/}
+                                        {/*    value={newReply[c.id]?.author || ''}*/}
+                                        {/*    onChange={(e) => handleReplyChange(c.id, 'author', e.target.value)}*/}
+                                        {/*/>*/}
                                         <TextField
                                             variant="outlined"
                                             label="답글 내용"
