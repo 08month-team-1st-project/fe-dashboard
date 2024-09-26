@@ -97,8 +97,8 @@ const PostDetailPage = () => {
             if (data.field_errors) {
                 handleFieldErrors(data.field_errors);
             } else {
-                // 이제 이건 떳다!!!!
-                alert(data.message);
+                localStorage.setItem('post', JSON.stringify(data));
+                console.log(data);
             }
         })
             .catch(err => console.error(err));
@@ -249,10 +249,6 @@ const PostDetailPage = () => {
                 생성일자: {post.created_at}</CustomButton>
 
 
-            {/*게시글 데이터 자체를 api 요청이 아닌 로컬스토리지에서 꺼내오는 방식으로 돼있어서,
-            게시글 수정해도, 화면에 db에 반영된 수정일자가 반영되진 않는다.
-            보려면 홈(게시글목록) 으로 갔다가 목록에 나온 게시글을 다시 클릭해서 접근해야 반영됨
-            */}
             {(localStorage.getItem("email") === post.author) &&
                 <CustomButton style={{backgroundColor: grey[400]}}
                 >수정일자 {post.modified_at}</CustomButton>}
