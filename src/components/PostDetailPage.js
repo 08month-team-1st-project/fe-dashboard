@@ -18,7 +18,7 @@ const PostDetailPage = () => {
 
     const [fieldErrors, setFieldErrors] = useState({title: [], content: []}); // 필드별 에러 메시지를 배열로 관리
     const location = useLocation();
-
+    const [replies, setReplies] = useState({}); // 댓글 ID를 키로 하는 답글 상태
 
     // const logoutHandler = () => {
     //     const email = localStorage.getItem('email');
@@ -43,20 +43,33 @@ const PostDetailPage = () => {
 
 
     async function fetchData() {
-        await fetch('http://localhost:8080/api/comments',
-            {
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            }
-        )
-            .then(res => res.json()).then(res => {
-              console.log(res);
-                if (!res) return;
-                setComments([...res.comments.filter(c => c?.post_id === post.id)])
-            })
-            .catch((err) => console.error(err));
+        // 댓글과 각 댓글에 대한 답글을 가져옵니다.
+        const commentsResponse = await fetch('http://localhost:8080/api/comments', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        });
+        const commentsData = await commentsResponse.json();
+        const filteredComments = commentsData.comments.filter(c => c?.post_id === post.id);
+        setComments(filteredComments);
+
+        // 각 댓글에 대한 답글을 가져옵니다.
+        const repliesPromises = filteredComments.map(async comment => {
+            const repliesResponse = await fetch(`http://localhost:8080/api/replies?comment_id=${comment.id}`);
+            const repliesData = await repliesResponse.json();
+            console.log(repliesData);
+            return { commentId: comment.id, replies: repliesData.reply};
+
+        });
+
+        const repliesData = await Promise.all(repliesPromises);
+        const repliesMap = repliesData.reduce((acc, { commentId, replies }) => {
+            acc[commentId] = replies;
+            return acc;
+        }, {});
+
+        setReplies(repliesMap);
     }
 
     useEffect(() => {
@@ -204,8 +217,23 @@ const PostDetailPage = () => {
                 content: newReply[commentId]?.content,
                 comment_id: commentId
             })
-        }).catch((err) => console.error(err));
+        }).then(res => {
+            if (res.ok) {
+                return res.json();
+            } else {
+                throw new Error("Failed to submit reply");
+            }
+        }).then(reply => {
+            // 답글이 성공적으로 생성된 경우
+            setReplies(prev => ({
+                ...prev,
+                [commentId]: [...(prev[commentId] || []), reply] // 새로운 답글 추가
+            }));
+            // 답글 입력 필드 초기화
+            setNewReply(prev => ({ ...prev, [commentId]: {} }));
+        }).catch(err => console.error(err));
     };
+
     const handleReplyChange = (commentId, field, value) => {
         setNewReply((prev) => ({
             ...prev,
@@ -215,6 +243,31 @@ const PostDetailPage = () => {
             }
         }));
     };
+
+    const handleReplyDelete = async (id) => {
+        await fetch(`http://localhost:8080/api/replies/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem("access_token")
+            }
+        }).then(res => {
+            const status = res.status;
+
+            if (status === 200) {
+                alert("댓글이 삭제되었습니다!");
+                return res.json();
+            } else if (status === 401) {
+                alert("로그인이 필요합니다.");
+                navigate('/login');
+            }
+            return res.json();
+        }).then(data=>{alert(data.message)})
+            .then(() => {
+                setComments(comments.filter(c => c.id !== id)); // 로컬 상태에서 댓글 삭제
+            }).catch((err) => console.error(err));
+    }
 
     const toggleReplyForm = (commentId) => {
         setReplyFormVisible((prev) => ({
@@ -395,6 +448,22 @@ const PostDetailPage = () => {
                                     </CustomButton>
                                   </div>
                               )}
+                                {/* 답글 목록 */}
+                                {replies[c.id]?.map(reply => (
+                                    <div key={reply.id} style={{ marginTop: '10px', paddingLeft: '40px' }}>
+                                        <Typography>{reply.content}</Typography>
+                                        <Typography color="text.secondary">작성자: {reply.memberEmail}</Typography>
+                                        <Typography color="text.secondary">{reply.created_at || ''}</Typography>
+                                        {(localStorage.getItem("email") === reply.memberEmail) &&
+                                            <CustomButton
+                                                style={{backgroundColor: blue[500]}}
+                                                onClick={() => handleReplyChange(reply.id, reply.content)}>수정</CustomButton>}
+                                        {(localStorage.getItem("email") === reply.memberEmail) &&
+                                            <CustomButton
+                                                style={{ backgroundColor: red[500], marginLeft: 10 }}
+                                                onClick={() => handleReplyDelete(reply.id)}>삭제</CustomButton>}
+                                    </div>
+                                ))}
                             </CardContent>
                         </Card>
                     )))
