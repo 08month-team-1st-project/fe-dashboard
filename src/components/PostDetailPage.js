@@ -8,28 +8,16 @@ import {useNavigate, useLocation, redirect} from 'react-router-dom';
 const PostDetailPage = () => {
     const navigate = useNavigate();
     const [post, setPost] = useState({});
-    const [comments, setComments] = useState([{
-        id: 1,
-        content: '댓글 내용',
-        author: '작성자1',
-        post_id: 1,
-        created_at: '작성일시'
-    },
-        {
-            id: 2,
-            content: '댓글 내용',
-            author: '작성자2',
-            post_id: 1,
-            created_at: '작성일시'
-        }]);
+    const [comments, setComments] = useState({});
     const [newComment, setNewCommnent] = useState({
         content: '',
         author: ''
     })
+    const [newReply, setNewReply] = useState({}); // 새로운 대댓글 상태
+    const [replyFormVisible, setReplyFormVisible] = useState({});
 
     const [fieldErrors, setFieldErrors] = useState({title: [], content: []}); // 필드별 에러 메시지를 배열로 관리
     const location = useLocation();
-
 
 
     // const logoutHandler = () => {
@@ -53,9 +41,18 @@ const PostDetailPage = () => {
         setFieldErrors(newFieldErrors);
     };
 
+
     async function fetchData() {
-        await fetch('http://localhost:8080/api/comments')
+        await fetch('http://localhost:8080/api/comments',
+            {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            }
+        )
             .then(res => res.json()).then(res => {
+              console.log(res);
                 if (!res) return;
                 setComments([...res.comments.filter(c => c?.post_id === post.id)])
             })
@@ -65,12 +62,13 @@ const PostDetailPage = () => {
     useEffect(() => {
         const postData = JSON.parse(localStorage.getItem('post'));
         setPost({...postData});
-        try {
-            fetchData();
-        } catch (e) {
-            console.error(e)
-        }
     }, []);
+
+    useEffect(() => {
+         if (post?.id) {
+           fetchData();
+           }
+    }, [post]);
 
     const handlePostChange = async () => {
         await fetch(`http://localhost:8080/api/posts/${post.id}`, {
@@ -109,16 +107,30 @@ const PostDetailPage = () => {
     const handleCommentChange = async (id, content) => {
         await fetch(`http://localhost:8080/api/comments/${id}`, {
             method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem("access_token")
+            },
             body: JSON.stringify({
                 content: content
             })
+        }).then(res => {
+          const status = res.status;
+
+          if (status === 200) {
+            alert("댓글이 수정되었습니다!");
+            return res.json();
+          } else if (status === 401) {
+            alert("로그인이 필요합니다.");
+            navigate('/post');
+          }
+          return res.json();
         }).catch((err) => console.error(err));
     };
 
-
     const changeComment = (commentId, comment) => {
         const indexToUpdate = comments.findIndex((item) => item.id === commentId);
-
         const newComments = comments;
         if (indexToUpdate !== -1) {
             newComments[indexToUpdate] = {
@@ -132,17 +144,87 @@ const PostDetailPage = () => {
     const submitComment = async () => {
         await fetch(`http://localhost:8080/api/comments`, {
             method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem("access_token")
+            },
             body: JSON.stringify({
                 author: newComment.author,
                 content: newComment.content,
                 post_id: post.id
             })
+        }).then(res => {
+          const status = res.status;
+           if (status === 401) {
+            alert("로그인이 필요합니다.");
+            navigate('/post');
+          }
+          return res.json();
         }).catch((err) => console.error(err));
     }
 
-    const handleRedirect = async () => {
-        navigate(`/post/${post.id}`)
+
+    const handleCommentDelete = async (id) => {
+        await fetch(`http://localhost:8080/api/comments/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem("access_token")
+            }
+        }).then(res => {
+          const status = res.status;
+
+          if (status === 200) {
+            alert("댓글이 삭제되었습니다!");
+            return res.json();
+          } else if (status === 401) {
+            alert("로그인이 필요합니다.");
+            navigate('/post');
+          }
+          return res.json();
+        }).then(() => {
+            setComments(comments.filter(c => c.id !== id)); // 로컬 상태에서 댓글 삭제
+        }).catch((err) => console.error(err));
+    }
+
+    const submitReply = async (commentId) => {
+        await fetch(`http://localhost:8080/api/replies`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem("access_token")
+            },
+            body: JSON.stringify({
+                author: newReply[commentId]?.author,
+                content: newReply[commentId]?.content,
+                comment_id: commentId
+            })
+        }).catch((err) => console.error(err));
     };
+    const handleReplyChange = (commentId, field, value) => {
+        setNewReply((prev) => ({
+            ...prev,
+            [commentId]: {
+                ...prev[commentId],
+                [field]: value
+            }
+        }));
+    };
+
+    const toggleReplyForm = (commentId) => {
+        setReplyFormVisible((prev) => ({
+            ...prev,
+            [commentId]: !prev[commentId] // 토글 기능
+        }));
+    };
+
+
+    // const handleRedirect = async () => {
+    //     navigate(`/post/${post.id}`)
+    // };
 
     return (
         <div style={{
@@ -163,11 +245,11 @@ const PostDetailPage = () => {
             <CustomButton
                 style={{backgroundColor: grey[400]}}>작성자: {post.author} </CustomButton>
 
-            <CustomButton style={{backgroundColor: grey[400]}}>작성자:
+            <CustomButton style={{backgroundColor: grey[400]}}>
                 생성일자: {post.created_at}</CustomButton>
 
-            
-            {/*게시글 데이터 자체를 api 요청이 아닌 로컬스토리지에서 꺼내오는 방식으로 돼있어서, 
+
+            {/*게시글 데이터 자체를 api 요청이 아닌 로컬스토리지에서 꺼내오는 방식으로 돼있어서,
             게시글 수정해도, 화면에 db에 반영된 수정일자가 반영되진 않는다.
             보려면 홈(게시글목록) 으로 갔다가 목록에 나온 게시글을 다시 클릭해서 접근해야 반영됨
             */}
@@ -232,7 +314,7 @@ const PostDetailPage = () => {
                 게시글 수정 후 db에 반영된 데이터를 화면에 반영시켜주진 못함*/}
                 {(localStorage.getItem("email") === post.author) &&
                     <CustomButton style={{backgroundColor: red[500]}}
-                                  onClick={()=> window.location.reload()}>취소
+                                  onClick={() => window.location.reload()}>취소
                     </CustomButton>
                 }
             </div>
@@ -278,6 +360,35 @@ const PostDetailPage = () => {
                                 <CustomButton
                                     style={{backgroundColor: blue[500]}}
                                     onClick={() => handleCommentChange(c.id, c.content)}>수정</CustomButton>
+                                <CustomButton
+                                    style={{ backgroundColor: red[500], marginLeft: 10 }}
+                                    onClick={() => handleCommentDelete(c.id)}>삭제</CustomButton> {/* 삭제 버튼 추가 */}
+                                <CustomButton
+                                  style={{ backgroundColor: blue[500], marginLeft: 10 }}
+                                  onClick={() => toggleReplyForm(c.id)}>답글</CustomButton>
+                              {/* 답글 입력 폼 (토글 상태에 따라 표시) */}
+                              {replyFormVisible[c.id] && (
+                                  <div style={{ marginTop: '10px', paddingLeft: '20px' }}>
+                                    <TextField
+                                        variant="outlined"
+                                        label="답글 작성자"
+                                        value={newReply[c.id]?.author || ''}
+                                        onChange={(e) => handleReplyChange(c.id, 'author', e.target.value)}
+                                    />
+                                    <TextField
+                                        variant="outlined"
+                                        label="답글 내용"
+                                        value={newReply[c.id]?.content || ''}
+                                        onChange={(e) => handleReplyChange(c.id, 'content', e.target.value)}
+                                    />
+                                    <CustomButton
+                                        style={{ backgroundColor: blue[500], marginTop: '10px' }}
+                                        onClick={() => submitReply(c.id)}
+                                    >
+                                      답글 생성
+                                    </CustomButton>
+                                  </div>
+                              )}
                             </CardContent>
                         </Card>
                     )))
