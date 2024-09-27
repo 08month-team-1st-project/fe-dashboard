@@ -117,6 +117,41 @@ const PostDetailPage = () => {
             .catch(err => console.error(err));
     };
 
+    const handlePostDelete = async () => {
+        await fetch(`http://localhost:8080/api/posts/${post.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem("access_token")
+            },
+            body: JSON.stringify({
+                title: post?.title || '',
+                content: post?.content || ''
+            })
+        }).then(res => {
+            const status = res.status;
+
+            if (status === 200) {
+                alert("게시글이 삭제되었습니다!");
+                navigate("/");
+                return res.json();
+            } else if (status === 401) {
+                alert("로그인이 필요합니다.");
+                navigate('/login');
+            }
+            return res.json();
+        }).then(data => {
+            if (data.field_errors) {
+                handleFieldErrors(data.field_errors);
+            } else {
+                localStorage.setItem('post', JSON.stringify(data));
+                console.log(data);
+            }
+        })
+            .catch(err => console.error(err));
+    };
+
     const handleCommentChange = async (id, content) => {
         await fetch(`http://localhost:8080/api/comments/${id}`, {
             method: 'PUT',
@@ -281,6 +316,7 @@ const PostDetailPage = () => {
 
             if (status === 200) {
                 alert("댓글이 삭제되었습니다!");
+                window.location.reload();
                 return res.json();
             } else if (status === 401) {
                 alert("로그인이 필요합니다.");
@@ -388,9 +424,16 @@ const PostDetailPage = () => {
 
                 {(localStorage.getItem("email") === post.author) &&
                     <CustomButton style={{backgroundColor: red[500]}}
+                                  onClick={handlePostDelete}>삭제
+                    </CustomButton>
+                }
+
+                {(localStorage.getItem("email") === post.author) &&
+                    <CustomButton style={{backgroundColor: red[500]}}
                                   onClick={() => window.location.reload()}>취소
                     </CustomButton>
                 }
+
             </div>
 
 
